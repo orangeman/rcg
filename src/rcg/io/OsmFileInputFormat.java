@@ -1,3 +1,6 @@
+package rcg.io;
+
+
 
 
 import java.io.IOException;
@@ -14,6 +17,8 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+
+import rcg.data.NodeWritable;
 
 /**
  * MatchInputFormat is a {@link OsmRecordReader} only input format.
@@ -82,21 +87,18 @@ public class OsmFileInputFormat extends FileInputFormat<LongWritable, Writable> 
 					mWayNodes.clear();
 					while (scanner.findWithinHorizon("<nd ref='(\\d*)' />", 30) != null) {
 						mWayNodes.add(new LongWritable(new Long(scanner.match().group(1))));
-						//							System.out.println(scanner.match().group(1));;
 					}
 					while (scanner.findWithinHorizon("<tag", 10) != null) {
-						//							System.out.println("noch ein tag");
 						scanner.findWithinHorizon("k='(.*)' v='(.*)' />", 100);
 						if (scanner.match().group(1).equals("highway") && mWayNodes.size() > 0) {
-							//								System.out.println("HIGHWAY");
 							mWay.set((Writable[]) mWayNodes.toArray(new LongWritable[mWayNodes.size()]));
 							currentValue = mWay;
 							return true;
 						}
 					}
 				}
-				//					System.out.println("way fertig");;
 			}
+			System.out.println("hm");
 			return false;
 		}
 

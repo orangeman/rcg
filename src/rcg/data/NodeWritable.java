@@ -1,3 +1,4 @@
+package rcg.data;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -8,10 +9,10 @@ import org.apache.hadoop.io.Writable;
 
 public class NodeWritable implements Writable {
 
-	long id;
-	String lat = "";
-	String lon = "";
-	ArrayList<Long> outgoing;
+	public long id;
+	public String lat = "";
+	public String lon = "";
+	public ArrayList<Long> outgoing;
 	
 	
 	public NodeWritable() {

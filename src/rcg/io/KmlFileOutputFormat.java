@@ -1,3 +1,5 @@
+package rcg.io;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -8,6 +10,8 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+import rcg.data.NodeWritable;
 
 
 public class KmlFileOutputFormat extends FileOutputFormat<NodeWritable, NodeWritable> {
@@ -32,7 +36,7 @@ public class KmlFileOutputFormat extends FileOutputFormat<NodeWritable, NodeWrit
 						"<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n" +
 						"<Document>\n" +
 						"<Style id=\"orangeLine\">" +
-						"<LineStyle><color>7f57ffff</color><width>42</width></LineStyle>" +
+						"<LineStyle><color>ffffa500</color><width>42</width></LineStyle>" +
 						"</Style>\n\n").getBytes());
 		}
 		
