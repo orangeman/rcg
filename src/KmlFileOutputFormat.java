@@ -31,32 +31,28 @@ public class KmlFileOutputFormat extends FileOutputFormat<NodeWritable, NodeWrit
 			out.write(("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
 						"<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n" +
 						"<Document>\n" +
-						"<Style id=\"myStyle\">" +
-						"<LineStyle><color>7f00ffff</color><width>42</width></LineStyle>" +
+						"<Style id=\"orangeLine\">" +
+						"<LineStyle><color>7f57ffff</color><width>42</width></LineStyle>" +
 						"</Style>\n\n").getBytes());
 		}
 		
 		@Override
 		public void write(NodeWritable from, NodeWritable to) throws IOException,InterruptedException {
 			out.write(("<Placemark>\n" +
-			    "\t<name>deg:"+from.id+"-"+to.id+"</name>\n" +
-			    "\t<description>"+""+"</description>\n" +
-			    "<styleUrl>#myStyle</styleUrl>" +
+			    "\t<name>"+from.id+"->"+to.id+"</name>\n" +
+			    "<styleUrl>#orangeLine</styleUrl>" +
 			    "\t<LineString><extrude>1</extrude><tessellate>1</tessellate>" +
 			    "<coordinates>"+from.lon+","+from.lat+",0 "+to.lon+","+to.lat+",0"+
 			    "</coordinates></LineString>\n" +
 			    "</Placemark>\n").getBytes());
+			out.write(("<Placemark>\n" +
+//				"\t<name>deg:"+from.degree()+"</name>\n" +
+				"\t<description>"+from.id+"</description>\n" +
+				"\t<Point><coordinates>"+from.lon+","+from.lat +
+				"</coordinates></Point>\n" +
+			"</Placemark>\n").getBytes());
 			
 		}
-//		public void write(LongWritable id, NodeWritable node) throws IOException,InterruptedException {
-//			out.write(("<Placemark>\n" +
-//					"\t<name>deg:"+node.degree()+"</name>\n" +
-//					"\t<description>"+id.get()+"</description>\n" +
-//					"\t<Point><coordinates>"+node.lon+","+node.lat +
-//					"</coordinates></Point>\n" +
-//			"</Placemark>\n").getBytes());
-//			
-//		}
 		
 		@Override
 		public void close(TaskAttemptContext arg0) throws IOException, InterruptedException {

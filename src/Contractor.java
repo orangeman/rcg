@@ -109,6 +109,7 @@ public class Contractor extends Configured implements Tool {
     				NodeWritable nn = new NodeWritable(n.id);
     				nn.lat = n.lat;
     				nn.lon = n.lon;
+    				nn.outgoing = n.outgoing;
     				outgoing.add(nn);
     				}
     		}

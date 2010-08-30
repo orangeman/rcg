@@ -67,40 +67,37 @@ public class OsmFileInputFormat extends FileInputFormat<LongWritable, Writable> 
 
 		@Override
 		public boolean nextKeyValue() throws IOException, InterruptedException {
-			
-			while (true) {
-				if (scanner.findWithinHorizon("(<node|<way) id='(\\d*)'", 10000) != null) {
-					if (scanner.match().group(1).equals("<node")){
-						mKey.set(Long.valueOf(scanner.match().group(2)));
-						scanner.findWithinHorizon("lat='(.*)' lon='(.*)'", 300);
-						mNode.lat = scanner.match().group(1);
-						mNode.lon = scanner.match().group(2);
-						mNode.id = 0;
-						currentValue = mNode;
-						return true;
-					} else if (scanner.match().group(1).equals("<way")){
-						scanner.findWithinHorizon(">", 100);
-						mWayNodes.clear();
-						while (scanner.findWithinHorizon("<nd ref='(\\d*)' />", 30) != null) {
-							mWayNodes.add(new LongWritable(new Long(scanner.match().group(1))));
-//							System.out.println(scanner.match().group(1));;
-						}
-						while (scanner.findWithinHorizon("<tag", 10) != null) {
-//							System.out.println("noch ein tag");
-							if (scanner.findWithinHorizon("k='(.*)' v='(.*)' />", 100) != null);
-							if (scanner.match().group(1).equals("highway") && mWayNodes.size() > 0) {
-//								System.out.println("HIGHWAY");
-								mWay.set((Writable[]) mWayNodes.toArray(new LongWritable[mWayNodes.size()]));
-								currentValue = mWay;
-								return true;
-							}
-						}
-						System.out.println("way fertig");;
-					}
+
+			while (scanner.findWithinHorizon("(<node|<way) id='(\\d*)'", 10000) != null) {
+				if (scanner.match().group(1).equals("<node")) {
+					mKey.set(Long.valueOf(scanner.match().group(2)));
+					scanner.findWithinHorizon("lat='(.*)' lon='(.*)'", 300);
+					mNode.lat = scanner.match().group(1);
+					mNode.lon = scanner.match().group(2);
+					mNode.id = 0;
+					currentValue = mNode;
 					return true;
+				} else if (scanner.match().group(1).equals("<way")){
+					scanner.findWithinHorizon(">", 100);
+					mWayNodes.clear();
+					while (scanner.findWithinHorizon("<nd ref='(\\d*)' />", 30) != null) {
+						mWayNodes.add(new LongWritable(new Long(scanner.match().group(1))));
+						//							System.out.println(scanner.match().group(1));;
+					}
+					while (scanner.findWithinHorizon("<tag", 10) != null) {
+						//							System.out.println("noch ein tag");
+						scanner.findWithinHorizon("k='(.*)' v='(.*)' />", 100);
+						if (scanner.match().group(1).equals("highway") && mWayNodes.size() > 0) {
+							//								System.out.println("HIGHWAY");
+							mWay.set((Writable[]) mWayNodes.toArray(new LongWritable[mWayNodes.size()]));
+							currentValue = mWay;
+							return true;
+						}
+					}
 				}
-				return false;
+				//					System.out.println("way fertig");;
 			}
+			return false;
 		}
 
 		@Override
