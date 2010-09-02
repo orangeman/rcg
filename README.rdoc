@@ -1,0 +1,19 @@
+== RCG
+
+	preprocessing openstreetmap data to build a "route containment graph" using hadoop MapReduce.
+
+
+== Build
+
+	$ ant
+	$ java -jar rcg.jar
+	$ googleearth output/nodes.kml
+
+
+== License
+
+	copyright (c) florian detig
+	distributed under the GPLv3.
+	please see the LICENSE file.
+
+

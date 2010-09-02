@@ -33,8 +33,7 @@
     <delete file="manifest"/>
   </target>
 
-  <target name="clean"
-	description="clean the generated files " >
+  <target name="clean" description="clean the generated files " >
     <delete dir="bin"/>
     <delete dir="nodes"/>
     <delete dir="output"/>
