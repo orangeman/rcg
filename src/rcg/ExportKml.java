@@ -45,7 +45,7 @@ public class ExportKml extends Configured implements Tool {
     	public void map(LongWritable key, NodeWritable node, Context context) throws IOException, InterruptedException {
     		
     		context.write(key, node);
-    		for (long to : node.outgoing) {
+    		for (long to : node.neighbours) {
     			context.write(new LongWritable(to), node);
     		}
     		
@@ -64,11 +64,14 @@ public class ExportKml extends Configured implements Tool {
     				node = new NodeWritable(n.id);
     				node.lat = n.lat;
     				node.lon = n.lon;
+    				node.neighbours = (ArrayList<Long>) n.neighbours.clone();
+    				node.distances = (ArrayList<Integer>) n.distances.clone();
     			} else {
     				NodeWritable nn = new NodeWritable(n.id);
     				nn.lat = n.lat;
     				nn.lon = n.lon;
-    				nn.outgoing = n.outgoing;
+    				nn.neighbours = (ArrayList<Long>) n.neighbours.clone();
+    				nn.distances = (ArrayList<Integer>) n.distances.clone();
     				outgoing.add(nn);
     				}
     		}

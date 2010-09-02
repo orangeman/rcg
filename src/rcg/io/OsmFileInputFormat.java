@@ -77,8 +77,8 @@ public class OsmFileInputFormat extends FileInputFormat<LongWritable, Writable> 
 				if (scanner.match().group(1).equals("<node")) {
 					mKey.set(Long.valueOf(scanner.match().group(2)));
 					scanner.findWithinHorizon("lat='(.*)' lon='(.*)'", 300);
-					mNode.lat = scanner.match().group(1);
-					mNode.lon = scanner.match().group(2);
+					mNode.lat = Float.valueOf(scanner.match().group(1));
+					mNode.lon = Float.valueOf(scanner.match().group(2));
 					mNode.id = 0;
 					currentValue = mNode;
 					return true;

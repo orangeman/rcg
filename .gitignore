@@ -1,6 +1,7 @@
 bin
 nodes
 output
+rcg.jar
 .project
 .settings
 .classpath

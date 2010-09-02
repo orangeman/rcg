@@ -1,0 +1,44 @@
+<project name="rcg" default="jar" basedir=".">
+  <description>preprocess osm data using hadoop MapReduce</description>
+
+  <property name="HADOOP_HOME" location="/home/orangeman/hadoop-0.20.2"/>
+  <path id="classpath">
+    <pathelement location="${bin}"/>
+    <fileset dir="${HADOOP_HOME}">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
+
+  <target name="compile" description="compile the source " >
+    <mkdir dir="bin"/>
+    <javac srcdir="src" destdir="bin">
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile" description="build the jar" >
+    <delete file="rcg.jar"/>
+    <manifestclasspath property="jar.classpath" jarfile="rcg.jar">
+       <classpath refid="classpath" />
+    </manifestclasspath>
+    <manifest file="manifest">
+      <attribute name="Built-By" value="orangeman"/>
+      <attribute name="Main-Class" value="rcg/App"/>
+      <attribute name="Class-Path" value="${jar.classpath}"/>
+    </manifest>
+    <jar basedir="bin"
+         jarfile="rcg.jar"
+         manifest="manifest"
+         includes="**/*.class"/>
+    <delete file="manifest"/>
+  </target>
+
+  <target name="clean"
+	description="clean the generated files " >
+    <delete dir="bin"/>
+    <delete dir="nodes"/>
+    <delete dir="output"/>
+	<delete file="rcg.jar"/>  
+</target>
+</project>
+

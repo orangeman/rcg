@@ -6,7 +6,6 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -50,8 +49,8 @@ public class KmlFileOutputFormat extends FileOutputFormat<NodeWritable, NodeWrit
 			    "</coordinates></LineString>\n" +
 			    "</Placemark>\n").getBytes());
 			out.write(("<Placemark>\n" +
-//				"\t<name>deg:"+from.degree()+"</name>\n" +
-				"\t<description>"+from.id+"</description>\n" +
+				"\t<name>"+from.degree()+"</name>\n" +
+				"\t<description>" +from.distances.get(from.neighbours.indexOf(to.id))+"</description>\n" +
 				"\t<Point><coordinates>"+from.lon+","+from.lat +
 				"</coordinates></Point>\n" +
 			"</Placemark>\n").getBytes());

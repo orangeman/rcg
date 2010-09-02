@@ -32,7 +32,10 @@ import org.apache.hadoop.mapreduce.lib.reduce.LongSumReducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import rcg.ExportKml.KmlMapper;
+import rcg.ExportKml.KmlReducer;
 import rcg.data.NodeWritable;
+import rcg.io.KmlFileOutputFormat;
 import rcg.io.OsmFileInputFormat;
 
 
@@ -65,17 +68,17 @@ public class ImportOsm extends Configured implements Tool {
 
         	NodeWritable node = null;
         	Iterator<NodeWritable> iter = values.iterator();
-        	ArrayList<Long> outgoing = new ArrayList<Long>();
+        	ArrayList<Long> neighbours = new ArrayList<Long>();
         	while (iter.hasNext()) {
 				NodeWritable val = (NodeWritable) iter.next();
-				if (!val.lat.equals("") && !val.lon.equals("")) {
+				if (val.id == 0) {
 					node = new NodeWritable(key.get());
 					node.id = key.get();
 					node.lat = val.lat;
 					node.lon = val.lon;
-					node.outgoing = outgoing;
+					node.neighbours = neighbours;
 				} else {
-					outgoing.add(val.id);
+					neighbours.add(val.id);
 				}
 			}
         	if (node != null && node.degree() > 0) {
@@ -86,13 +89,84 @@ public class ImportOsm extends Configured implements Tool {
     }
 
     
+    
+    public static class DistMapper extends Mapper<LongWritable, NodeWritable, LongWritable, NodeWritable>{
+    	
+    	public void map(LongWritable key, NodeWritable node, Context context) throws IOException, InterruptedException {
+    		
+    		context.write(key, node);
+    		for (long nb_id : node.neighbours) {
+    			context.write(new LongWritable(nb_id), node);
+    		}
+    		
+    	}
+    }
+    
+    
+    public static class DistReducer extends Reducer<LongWritable, NodeWritable, LongWritable, NodeWritable> {
+    	
+    	NodeWritable node;
+    	ArrayList<Long> neighbours;
+    	ArrayList<Integer> distances;
+    	
+    	
+    	@Override
+		protected void setup(org.apache.hadoop.mapreduce.Reducer.Context context) throws IOException, InterruptedException {
+			neighbours = new ArrayList<Long>();
+			distances = new ArrayList<Integer>();
+		}
+
+		public void reduce(LongWritable key, Iterable<NodeWritable> nodes, Context context) throws IOException, InterruptedException {
+			
+			node = null;
+			distances.clear();
+    		neighbours.clear();
+    		for (NodeWritable n : nodes) {
+    			if (n.id == key.get()) {
+    				node = new NodeWritable(n.id);
+    				node.lat = n.lat;
+    				node.lon = n.lon;
+    			} else {
+    				neighbours.add(n.id);
+    				if (node != null)
+    					distances.add(distance(node.lat, node.lon, n.lat, n.lon));
+    				else
+    					distances.add(0);
+    			}
+    		}
+    		node.neighbours = neighbours;
+    		node.distances = distances;
+    		context.write(key, node);
+    		
+//    		System.out.println("node "+key.get()+" has not emitted itself");
+    	}
+    }
+    
+    
+    static Integer distance(float lat1, float lon1, float lat2, float lon2) {
+        double earthRadius = 3958.75;
+        double dLat = Math.toRadians(lat2-lat1);
+        double dLng = Math.toRadians(lon2-lon1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                   Math.sin(dLng/2) * Math.sin(dLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        double dist = earthRadius * c;
+
+        int meterConversion = 1609;
+
+        return new Integer((int)(dist * meterConversion));
+    }
+
+    
+    
     @Override
     public int run(String[] args) throws Exception {
     		
     	try {
     		
     		Path in = new Path(args[0]);
-    		Path out = new Path(args[1]);
+    		Path out = new Path("intermediate");
     		Job myJob = new Job(getConf(), "");
 //    		myJob.setJarByClass(ImportOsm.class);
     		myJob.setMapperClass(OsmMapper.class);
@@ -105,6 +179,23 @@ public class ImportOsm extends Configured implements Tool {
     		myJob.setOutputFormatClass(SequenceFileOutputFormat.class);
     		
     		myJob.waitForCompletion(true);
+    		
+    		in = out;
+    		out = new Path(args[1]);
+    		myJob = new Job(getConf(), "");
+//    		myJob.setJarByClass(ExportKml.class);
+    		myJob.setMapperClass(DistMapper.class);
+    		myJob.setReducerClass(DistReducer.class);
+    		FileInputFormat.setInputPaths(myJob, in);
+    		FileOutputFormat.setOutputPath(myJob, out);
+    		myJob.setOutputKeyClass(LongWritable.class);
+    		myJob.setOutputValueClass(NodeWritable.class);
+    		myJob.setInputFormatClass(SequenceFileInputFormat.class);
+    		myJob.setOutputFormatClass(SequenceFileOutputFormat.class);
+    		
+    		myJob.waitForCompletion(true);
+    		
+    		FileSystem.get(getConf()).delete(new Path("intermediate"));
     		
     	} catch (IOException e) {
     		e.printStackTrace();
