@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Writable;
 public class NodeWritable implements Writable {
 
 	public long id;
+	public int conn;
 	public float lat;
 	public float lon;
 	public ArrayList<Long> neighbours;
@@ -33,6 +34,7 @@ public class NodeWritable implements Writable {
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeLong(id);
+		out.writeInt(conn);
 		out.writeFloat(lat);
 		out.writeFloat(lon);
 		
@@ -47,6 +49,7 @@ public class NodeWritable implements Writable {
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		id = in.readLong();
+		conn = in.readInt();
 		lat = in.readFloat();
 		lon = in.readFloat();
 

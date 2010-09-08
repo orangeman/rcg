@@ -1,5 +1,6 @@
 bin
 nodes
+#nodes*
 output
 rcg.jar
 .project

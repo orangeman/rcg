@@ -18,6 +18,7 @@ import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.SequenceFileAsBinaryOutputFormat;
+import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -40,6 +41,33 @@ import rcg.io.KmlFileOutputFormat;
 public class ExportKml extends Configured implements Tool {
 
 	
+    public static class LatLonJoinMapper extends Mapper<LongWritable, NodeWritable, LongWritable, NodeWritable>{
+    	
+    	public void map(LongWritable key, NodeWritable node, Context context) throws IOException, InterruptedException {
+    		context.write(key, node);
+    	}
+    }
+	
+    public static class LatLonJoinReducer extends Reducer<LongWritable, NodeWritable, LongWritable, NodeWritable> {
+    	
+    	public void reduce(LongWritable key, Iterable<NodeWritable> values, Context context) throws IOException, InterruptedException {
+    		
+    		NodeWritable node = new NodeWritable(key.get());
+    		for (NodeWritable n : values) {
+    			if (n.lat != 0) {
+    				node.lat = n.lat;
+    				node.lon = n.lon;
+    			} else {
+    				node.conn = n.conn;
+    				node.neighbours = (ArrayList<Long>) n.neighbours.clone();
+    				node.distances = (ArrayList<Integer>) n.distances.clone();
+    			}
+    		}
+    		context.write(key, node);
+    	}
+    }
+	
+	
     public static class KmlMapper extends Mapper<LongWritable, NodeWritable, LongWritable, NodeWritable>{
     	
     	public void map(LongWritable key, NodeWritable node, Context context) throws IOException, InterruptedException {
@@ -51,8 +79,7 @@ public class ExportKml extends Configured implements Tool {
     		
     	}
     }
-    
-    
+
     public static class KmlReducer extends Reducer<LongWritable, NodeWritable, NodeWritable, NodeWritable> {
     	
     	public void reduce(LongWritable key, Iterable<NodeWritable> values, Context context) throws IOException, InterruptedException {
@@ -64,12 +91,14 @@ public class ExportKml extends Configured implements Tool {
     				node = new NodeWritable(n.id);
     				node.lat = n.lat;
     				node.lon = n.lon;
+    				node.conn = n.conn;
     				node.neighbours = (ArrayList<Long>) n.neighbours.clone();
     				node.distances = (ArrayList<Integer>) n.distances.clone();
     			} else {
     				NodeWritable nn = new NodeWritable(n.id);
     				nn.lat = n.lat;
     				nn.lon = n.lon;
+    				nn.conn = n.conn;
     				nn.neighbours = (ArrayList<Long>) n.neighbours.clone();
     				nn.distances = (ArrayList<Integer>) n.distances.clone();
     				outgoing.add(nn);
@@ -92,8 +121,24 @@ public class ExportKml extends Configured implements Tool {
     	try {
     		
     		Path in = new Path(args[0]);
-    		Path out = new Path(args[1]);
+    		Path out = new Path("intermediate");
     		Job myJob = new Job(getConf(), "");
+//    		myJob.setJarByClass(ExportKml.class);
+    		myJob.setMapperClass(LatLonJoinMapper.class);
+    		myJob.setReducerClass(LatLonJoinReducer.class);
+    		FileInputFormat.setInputPaths(myJob, in, new Path("nodes"));
+    		FileOutputFormat.setOutputPath(myJob, out);
+    		myJob.setOutputKeyClass(LongWritable.class);
+    		myJob.setOutputValueClass(NodeWritable.class);
+    		myJob.setInputFormatClass(SequenceFileInputFormat.class);
+    		myJob.setOutputFormatClass(SequenceFileOutputFormat.class);
+    		
+    		myJob.waitForCompletion(true);
+
+    		
+    		in = out;
+    		out = new Path(args[1]);
+    		myJob = new Job(getConf(), "");
 //    		myJob.setJarByClass(ExportKml.class);
     		myJob.setMapperClass(KmlMapper.class);
     		myJob.setReducerClass(KmlReducer.class);
@@ -105,7 +150,10 @@ public class ExportKml extends Configured implements Tool {
     		myJob.setOutputFormatClass(KmlFileOutputFormat.class);
     		myJob.setInputFormatClass(SequenceFileInputFormat.class);
     		
-    		System.exit(myJob.waitForCompletion(true) ? 0 : 1);
+    		myJob.waitForCompletion(true);
+    		
+    		FileSystem.get(getConf()).delete(new Path("intermediate"));
+    		
     	} catch (IOException e) {
     		e.printStackTrace();
     		System.exit(3);

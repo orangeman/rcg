@@ -9,14 +9,16 @@ import org.apache.hadoop.io.Writable;
 
 public class EdgeWritable implements Writable {
 
-	long from;
-	long to;
-	int dist;
-	ArrayList<Long> vias = new ArrayList<Long>();
-	ArrayList<Integer> dets = new ArrayList<Integer>();
+	public long from;
+	public long to;
+	public int dist;
+	public ArrayList<Long> vias = new ArrayList<Long>();
+	public ArrayList<Integer> dets = new ArrayList<Integer>();
 	
 	
-	
+	public EdgeWritable() {
+		this(0,0);
+	}
 	
 	public EdgeWritable(long from, long to) {
 		this.from = from;
@@ -35,6 +37,8 @@ public class EdgeWritable implements Writable {
 		
 		out.writeLong(from);
 		out.writeLong(to);
+		out.writeInt(dist);
+		
 		out.writeShort(vias.size());
 		for (Long id : vias)
 			out.writeLong(id);
@@ -48,6 +52,7 @@ public class EdgeWritable implements Writable {
 
 		from = in.readLong();
 		to = in.readLong();
+		dist = in.readInt();
 		
 		short deg = in.readShort();
 		vias = new ArrayList<Long>(deg);

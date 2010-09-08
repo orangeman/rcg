@@ -35,7 +35,7 @@ public class KmlFileOutputFormat extends FileOutputFormat<NodeWritable, NodeWrit
 						"<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n" +
 						"<Document>\n" +
 						"<Style id=\"orangeLine\">" +
-						"<LineStyle><color>ffffa500</color><width>42</width></LineStyle>" +
+						"<LineStyle><color>44ffa500</color><width>42</width></LineStyle>" +
 						"</Style>\n\n").getBytes());
 		}
 		
@@ -49,7 +49,7 @@ public class KmlFileOutputFormat extends FileOutputFormat<NodeWritable, NodeWrit
 			    "</coordinates></LineString>\n" +
 			    "</Placemark>\n").getBytes());
 			out.write(("<Placemark>\n" +
-				"\t<name>"+from.degree()+"</name>\n" +
+				"\t<name>"+from.degree()+"-"+from.conn+"</name>\n" +
 				"\t<description>" +from.distances.get(from.neighbours.indexOf(to.id))+"</description>\n" +
 				"\t<Point><coordinates>"+from.lon+","+from.lat +
 				"</coordinates></Point>\n" +
