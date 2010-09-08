@@ -32,8 +32,6 @@ import org.apache.hadoop.mapreduce.lib.reduce.LongSumReducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import rcg.ExportKml.KmlMapper;
-import rcg.ExportKml.KmlReducer;
 import rcg.data.NodeWritable;
 import rcg.io.KmlFileOutputFormat;
 import rcg.io.OsmFileInputFormat;
@@ -105,39 +103,37 @@ public class ImportOsm extends Configured implements Tool {
     
     public static class DistReducer extends Reducer<LongWritable, NodeWritable, LongWritable, NodeWritable> {
     	
-    	NodeWritable node;
-    	ArrayList<Long> neighbours;
+    	NodeWritable myNode;
+    	ArrayList<NodeWritable> neighbours;
     	ArrayList<Integer> distances;
     	
     	
     	@Override
 		protected void setup(org.apache.hadoop.mapreduce.Reducer.Context context) throws IOException, InterruptedException {
-			neighbours = new ArrayList<Long>();
-			distances = new ArrayList<Integer>();
+			neighbours = new ArrayList<NodeWritable>();
 		}
 
 		public void reduce(LongWritable key, Iterable<NodeWritable> nodes, Context context) throws IOException, InterruptedException {
 			
-			node = null;
-			distances.clear();
+			myNode = null;
     		neighbours.clear();
     		for (NodeWritable n : nodes) {
-    			if (n.id == key.get()) {
-    				node = new NodeWritable(n.id);
-    				node.lat = n.lat;
-    				node.lon = n.lon;
+    			NodeWritable node = new NodeWritable(n.id);
+    			node.lat = n.lat;
+    			node.lon = n.lon;
+    			if (node.id == key.get()) {
+    				myNode = node;
     			} else {
-    				neighbours.add(n.id);
-    				if (node != null)
-    					distances.add(distance(node.lat, node.lon, n.lat, n.lon));
-    				else
-    					distances.add(0);
+    				neighbours.add(node);
     			}
     		}
-    		node.neighbours = neighbours;
-    		node.distances = distances;
-    		context.write(key, node);
-    		
+    		if (myNode != null) {
+    			for (NodeWritable n : neighbours) {
+    				myNode.neighbours.add(n.id);
+    				myNode.distances.add(distance(myNode.lat, myNode.lon, n.lat, n.lon));
+    			}
+    		}
+    		context.write(key, myNode);
 //    		System.out.println("node "+key.get()+" has not emitted itself");
     	}
     }
